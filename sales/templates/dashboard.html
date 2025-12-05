@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}仪表盘 - Monster ABC CRM{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold">📅 任务日程</h2>
+        <p class="text-muted">所有未来的预约任务安排</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        {% if tasks_by_date %}
+        {% for date, tasks in tasks_by_date.items %}
+        <div class="mb-4">
+            <h4 class="fw-bold mb-3">
+                {{ date|date:"Y年n月j日 (l)" }}
+                {% if date == today_date %}
+                <span class="badge bg-primary">今天</span>
+                {% endif %}
+            </h4>
+            <div class="card border-0 shadow-sm">
+                <div class="list-group list-group-flush">
+                    {% for customer in tasks %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <h6 class="fw-bold mb-0 me-3" style="min-width: 150px;">{{ customer.name }}</h6>
+                            <span class="text-muted small me-3">
+                                {% if customer.next_contact_time %}
+                                {{ customer.next_contact_time|date:"H:i" }}
+                                {% else %}
+                                全天
+                                {% endif %}
+                            </span>
+                            {% if customer.status == 'wait_contact' %}
+                            <span class="badge bg-info">{{ customer.get_status_display }}</span>
+                            {% elif customer.status == 'wait_followup' %}
+                            <span class="badge bg-warning">{{ customer.get_status_display }}</span>
+                            {% elif customer.status == 'wait_visit' %}
+                            <span class="badge bg-primary">{{ customer.get_status_display }}</span>
+                            {% elif customer.status == 'visited' %}
+                            <span class="badge bg-success">{{ customer.get_status_display }}</span>
+                            {% elif customer.status == 'signed' %}
+                            <span class="badge bg-dark">{{ customer.get_status_display }}</span>
+                            {% elif customer.status == 'no_intent' %}
+                            <span class="badge bg-secondary">{{ customer.get_status_display }}</span>
+                            {% elif customer.status == 'unreachable' %}
+                            <span class="badge bg-danger">{{ customer.get_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-light text-dark">{{ customer.get_status_display }}</span>
+                            {% endif %}
+                            {% if customer.sales_rep and user.is_superuser %}
+                            <span class="text-muted small ms-3">销售: {{ customer.sales_rep.username }}</span>
+                            {% endif %}
+                        </div>
+                        <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-sm btn-primary">
+                            查看
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="card border-0 shadow-sm p-5 text-center text-muted">
+            <i class="bi bi-calendar-check display-4 mb-3 d-block text-secondary"></i>
+            <h5 class="fw-bold">暂无预约安排</h5>
+            <p class="mb-0">目前没有待处理的预约任务。</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

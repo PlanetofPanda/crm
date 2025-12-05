@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}仪表盘 - Monster ABC CRM{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="fw-bold">仪表盘</h2>
+        <p class="text-muted">这是您今天和明天的任务概览。</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 左侧任务列表 -->
+    <div class="col-lg-8">
+        <!-- 今日任务 -->
+        <div class="mb-5">
+            <h4 class="fw-bold mb-3">今天, {{ today_date|date:"n月j日" }}</h4>
+            {% if today_tasks %}
+            {% for customer in today_tasks %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ customer.name }}</h5>
+                            <div class="text-primary fw-bold small">
+                                {% if customer.next_contact_time %}
+                                {% if customer.next_contact_time.hour < 12 %}上午{% else %}下午{% endif %} {{ customer.next_contact_time|date:"H:i" }}
+                                {% else %} 全天 {% endif %}
+                            </div>
+                            <span class="badge bg-light text-primary border border-primary-subtle rounded-pill px-3">
+                                {{ customer.get_status_display }}
+                            </span>
+                        </div>
+
+                        <p class="text-muted mb-4 small">
+                            {% if customer.last_contact_note %}
+                            {{ customer.last_contact_note }}
+                            {% else %}
+                            暂无备注信息...
+                            {% endif %}
+                        </p>
+
+                        <div class="d-flex gap-3">
+                            <a href="tel:{{ customer.phone }}" class="btn btn-light flex-grow-1 border">
+                                <i class="bi bi-telephone-fill me-2"></i> 记录通话
+                            </a>
+                            <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-arrow-repeat me-2"></i> 状态
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="card border-0 shadow-sm p-4 text-center text-muted">
+                <i class="bi bi-check-circle display-4 mb-3 d-block text-success"></i>
+                今日暂无任务，享受美好一天！
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 明日任务 -->
+        <div>
+            <h4 class="fw-bold mb-3">明天, {{ tomorrow_date|date:"n月j日" }}</h4>
+            {% if tomorrow_tasks %}
+            {% for customer in tomorrow_tasks %}
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="fw-bold mb-1">{{ customer.name }}</h5>
+                            <div class="text-primary fw-bold small">
+                                {% if customer.next_contact_time %}
+                                {% if customer.next_contact_time.hour < 12 %}上午{% else %}下午{% endif %} {{ customer.next_contact_time|date:"H:i" }}
+                                {% else %} 全天 {% endif %}
+                            </div>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">
+                                {{ customer.get_status_display }}
+                            </span>
+                        </div>
+
+                        <p class="text-muted mb-4 small">
+                            {% if customer.last_contact_note %}
+                            {{ customer.last_contact_note }}
+                            {% else %}
+                            预计跟进客户需求...
+                            {% endif %}
+                        </p>
+
+                        <div class="d-flex gap-3">
+                            <a href="tel:{{ customer.phone }}" class="btn btn-light flex-grow-1 border">
+                                <i class="bi bi-telephone-fill me-2"></i> 记录通话
+                            </a>
+                            <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-arrow-repeat me-2"></i> 状态
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="card border-0 border-dashed shadow-sm p-5 text-center text-muted bg-light">
+                <i class="bi bi-calendar-check display-4 mb-3 d-block text-secondary"></i>
+                <h5 class="fw-bold">明天一切顺利！</h5>
+                <p class="mb-0">没有更多安排的任务。</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 右侧日历 -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <button class="btn btn-sm btn-light rounded-circle"><i class="bi bi-chevron-left"></i></button>
+                    <h5 class="fw-bold mb-0">{{ today_date|date:"Y年n月" }}</h5>
+                    <button class="btn btn-sm btn-light rounded-circle"><i class="bi bi-chevron-right"></i></button>
+                </div>
+
+                <!-- 简单日历结构 -->
+                <div class="text-center">
+                    <div class="row mb-2 fw-bold text-muted small">
+                        <div class="col">日</div>
+                        <div class="col">一</div>
+                        <div class="col">二</div>
+                        <div class="col">三</div>
+                        <div class="col">四</div>
+                        <div class="col">五</div>
+                        <div class="col">六</div>
+                    </div>
+                    <!-- 示例日期行 -->
+                    <div class="row mb-2">
+                        <div class="col text-muted">29</div>
+                        <div class="col text-muted">30</div>
+                        <div class="col">1</div>
+                        <div class="col">2</div>
+                        <div class="col">3</div>
+                        <div class="col">4</div>
+                        <div class="col">5</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col">6</div>
+                        <div class="col">7</div>
+                        <div class="col">8</div>
+                        <div class="col">9</div>
+                        <div class="col">10</div>
+                        <div class="col">11</div>
+                        <div class="col">12</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col">13</div>
+                        <div class="col">14</div>
+                        <div class="col">15</div>
+                        <div class="col">16</div>
+                        <div class="col">17</div>
+                        <div class="col">18</div>
+                        <div class="col">19</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col">20</div>
+                        <div class="col">21</div>
+                        <div class="col">22</div>
+                        <div class="col">23</div>
+                        <div class="col">
+                            <span class="d-inline-block bg-primary text-white rounded-circle" style="width:30px; height:30px; line-height:30px;">{{ today_date|date:"j" }}</span>
+                        </div>
+                        <div class="col">25</div>
+                        <div class="col">26</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">27</div>
+                        <div class="col">28</div>
+                        <div class="col">29</div>
+                        <div class="col">30</div>
+                        <div class="col">31</div>
+                        <div class="col text-muted">1</div>
+                        <div class="col text-muted">2</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

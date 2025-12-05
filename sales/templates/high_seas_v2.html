@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}公海线索 - 怪兽ABC CRM{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2>🌊 公海线索</h2>
+        <p class="text-muted">这里是无负责人的客户,可以认领到自己名下</p>
+    </div>
+    {% if user.is_superuser %}
+    <div class="col-md-4 text-end">
+        <a href="{% url 'customer_add' %}" class="btn btn-primary">
+            ➕ 添加公海线索
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 筛选和搜索 -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">状态筛选</label>
+                <select name="status" class="form-select">
+                    <option value="">全部状态</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">搜索</label>
+                <input type="text" name="search" class="form-control" placeholder="姓名或电话" value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">🔍 筛选</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 公海客户列表 -->
+<div class="card">
+    <div class="card-body">
+        {% if customers %}
+        <form method="post" id="claimForm">
+            {% csrf_token %}
+            <input type="hidden" name="claim" value="true">
+            <div class="mb-3">
+                <button type="button" class="btn btn-success" id="claimBtn" onclick="showClaimModal()">
+                    🎯 认领选中的客户
+                </button>
+                {% if user.is_superuser %}
+                <button type="button" class="btn btn-primary" onclick="showBulkEditModalHighSeas()">
+                    🔄 批量修改
+                </button>
+                <button type="button" class="btn btn-danger" onclick="bulkDeleteHighSeas()">
+                    🗑️ 批量删除
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onclick="toggleAll(this)">
+                            </th>
+                            <th>姓名</th>
+                            <th>电话</th>
+                            <th>状态</th>
+                            <th>来源</th>
+                            <th>城市</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="customer_ids" value="{{ customer.id }}"
+                                    class="customer-checkbox">
+                            </td>
+                            <td>{{ customer.name }}</td>
+                            <td>{{ customer.phone }}</td>
+                            <td><span class="badge bg-secondary">{{ customer.get_status_display }}</span></td>
+                            <td>{{ customer.source|default:"-" }}</td>
+                            <td>{{ customer.city_auto|default:"-" }}</td>
+                            <td>{{ customer.created_at|date:"Y-m-d" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-muted mt-2">共 {{ customers.count }} 个公海客户</p>
+        </form>
+
+        <!-- 认领确认对话框 -->
+        <div class="modal fade" id="claimModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">确认认领</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="claimMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="button" class="btn btn-primary" id="confirmClaimBtn"
+                            onclick="confirmClaim()">确定</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <p>暂无公海客户</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('.customer-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    let claimModal = null;
+
+    function showClaimModal() {
+        const checked = document.querySelectorAll('.customer-checkbox:checked');
+        if (checked.length === 0) {
+            alert('请至少选择一个客户');
+            return;
+        }
+
+        // 设置确认消息
+        document.getElementById('claimMessage').textContent =
+            `确定要认领选中的 ${checked.length} 个客户吗？`;
+
+        // 显示 Modal
+        if (!claimModal) {
+            claimModal = new bootstrap.Modal(document.getElementById('claimModal'));
+        }
+        claimModal.show();
+    }
+
+    function confirmClaim() {
+        // 隐藏 Modal
+        claimModal.hide();
+
+        // 禁用按钮并显示处理中状态
+        const btn = document.getElementById('claimBtn');
+        btn.disabled = true;
+        btn.innerHTML = '处理中...';
+
+        // 提交表单
+        document.getElementById('claimForm').submit();
+    }
+
+    // 批量操作函数（仅管理员）
+    {% if user.is_superuser %}
+    let bulkEditModalHighSeas = null;
+
+    function showBulkEditModalHighSeas() {
+        const checked = document.querySelectorAll('.customer-checkbox:checked');
+        if (checked.length === 0) {
+            alert('请至少选择一个客户');
+            return;
+        }
+
+        // 清除之前的隐藏字段
+        const editForm = document.getElementById('bulkEditFormHighSeas');
+        const oldInputs = editForm.querySelectorAll('input[name="customer_ids"]');
+        oldInputs.forEach(input => input.remove());
+
+        // 添加选中的客户 ID
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'customer_ids';
+            input.value = cb.value;
+            editForm.appendChild(input);
+        });
+
+        // 更新消息
+        document.getElementById('bulkEditMessageHighSeas').textContent =
+            `已选中 ${checked.length} 个客户，请选择要修改的字段：`;
+
+        if (!bulkEditModalHighSeas) {
+            bulkEditModalHighSeas = new bootstrap.Modal(document.getElementById('bulkEditModalHighSeas'));
+        }
+        bulkEditModalHighSeas.show();
+    }
+
+    function bulkDeleteHighSeas() {
+        const checked = document.querySelectorAll('.customer-checkbox:checked');
+        if (checked.length === 0) {
+            alert('请至少选择一个客户');
+            return;
+        }
+
+        if (confirm(`⚠️ 确定要删除选中的 ${checked.length} 个客户吗？\n\n此操作不可恢复！`)) {
+            const form = document.getElementById('claimForm');
+            // 移除 claim 隐藏字段
+            const claimInput = form.querySelector('input[name="claim"]');
+            if (claimInput) claimInput.remove();
+
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'bulk_delete';
+            form.appendChild(actionInput);
+            form.submit();
+        }
+    }
+    {% endif %}
+</script>
+
+<!-- 批量修改对话框（公海线索） -->
+{% if user.is_superuser %}
+<div class="modal fade" id="bulkEditModalHighSeas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批量修改公海客户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="bulkEditFormHighSeas">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="bulk_edit">
+                <div class="modal-body">
+                    <p id="bulkEditMessageHighSeas" class="text-muted mb-3"></p>
+                    <div class="mb-3">
+                        <label class="form-label">修改状态</label>
+                        <select name="status" class="form-select">
+                            <option value="">不修改</option>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">分配销售经理</label>
+                        <select name="sales_rep" class="form-select">
+                            <option value="">不修改</option>
+                            <option value="0">保持公海</option>
+                            {% for u in all_users %}
+                            <option value="{{ u.id }}">{{ u.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确定修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

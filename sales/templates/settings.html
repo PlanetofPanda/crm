@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}系统设置 - 怪兽ABC CRM{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">⚙️ 系统设置</h2>
+
+<!-- 用户管理 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>👥 用户管理</h5>
+    </div>
+    <div class="card-body">
+        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            ➕ 添加用户
+        </button>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>员工权限</th>
+                        <th>超级管理员</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.email|default:"-" }}</td>
+                        <td>
+                            {% if u.is_staff %}
+                            <span class="badge bg-success">是</span>
+                            {% else %}
+                            <span class="badge bg-secondary">否</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.is_superuser %}
+                            <span class="badge bg-danger">是</span>
+                            {% else %}
+                            <span class="badge bg-secondary">否</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if u.id != user.id %}
+                            <form method="post" style="display: inline;" onsubmit="return confirm('确定要删除此用户吗?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                <button type="submit" name="delete_user" class="btn btn-sm btn-danger">删除</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">当前用户</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 数据管理 -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>💾 数据管理</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <strong>提示:</strong> 数据导入导出功能已集成到"我的客户"页面的批量操作中。
+        </div>
+        <p class="text-muted">
+            您可以在<a href="{% url 'my_customers' %}" class="text-decoration-none">我的客户</a>页面使用批量添加功能导入数据。
+        </p>
+    </div>
+</div>
+
+<!-- 添加用户模态框 -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加新用户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        {{ user_form.username }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">邮箱</label>
+                        {{ user_form.email }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">密码</label>
+                        {{ user_form.password1 }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">确认密码</label>
+                        {{ user_form.password2 }}
+                    </div>
+                    <div class="mb-3 form-check">
+                        {{ user_form.is_staff }}
+                        <label class="form-check-label">员工权限</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" name="add_user" class="btn btn-primary">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

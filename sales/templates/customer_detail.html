@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_edit %}编辑客户{% else %}新增客户{% endif %} - 怪兽ABC CRM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>{% if is_edit %}✒️ 编辑客户{% else %}➕ 新增客户{% endif %}</h4>
+                <a href="{% url 'my_customers' %}?page={{ request.session.last_customer_page|default:1 }}"
+                    class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-lg"></i> 关闭
+                </a>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">客户姓名 *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger small">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">联系电话 *</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="text-danger small">{{ form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">状态</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">销售经理</label>
+                            {{ form.sales_rep }}
+                            {% if form.sales_rep.errors %}
+                            <div class="text-danger small">{{ form.sales_rep.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">省份</label>
+                            {{ form.province }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">自动定位城市</label>
+                            {{ form.city_auto }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">手动填写地域</label>
+                            {{ form.region_manual }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">下次联系时间</label>
+                            {{ form.next_contact_time }}
+                            {% if form.next_contact_time.errors %}
+                            <div class="text-danger small">{{ form.next_contact_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">最近联系时间</label>
+                            {{ form.last_contact_at }}
+                            <small class="form-text text-muted d-block">系统自动记录，每次编辑时更新</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">重要备注</label>
+                        {{ form.notes }}
+                        <small class="form-text text-muted">
+                            记录客户的重要信息和备注
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_key_customer }}
+                            <label class="form-check-label" for="{{ form.is_key_customer.id_for_label }}">
+                                {{ form.is_key_customer.label }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">备注信息</label>
+                        {{ form.extra_data }}
+                        <small class="form-text text-muted">
+                            客户的备注信息或其他说明
+                        </small>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="mb-3">📝 自定义字段</h6>
+
+                    <!-- 动态渲染自定义字段 -->
+                    {% for field in form %}
+                    {% if field.name|slice:":13" == "custom_field_" %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="form-text text-muted d-block">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">💾 保存</button>
+                        <a href="{% url 'my_customers' %}?page={{ request.session.last_customer_page|default:1 }}"
+                            class="btn btn-secondary">❌ 取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

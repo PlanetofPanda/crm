@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}登录 - 怪兽ABC CRM{% endblock %}
+
+{% block unauthenticated_content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">
+                    <span style="font-size: 3rem;">🦖</span><br>
+                    怪兽ABC CRM
+                </h3>
+                <h5 class="text-center text-muted mb-4">加盟商管理系统</h5>
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">用户名</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <div class="text-danger small">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label">密码</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                        <div class="text-danger small">{{ form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_captcha_1" class="form-label">验证码</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="flex-shrink-0">
+                                {{ form.captcha.field.widget.render_image }}
+                            </div>
+                            <div class="flex-grow-1">
+                                {{ form.captcha }}
+                            </div>
+                        </div>
+                        {% if form.captcha.errors %}
+                        <div class="text-danger small">{{ form.captcha.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        登录
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+
+    #id_username,
+    #id_password,
+    #id_captcha_1 {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .captcha {
+        display: inline-block;
+    }
+</style>
+{% endblock %}

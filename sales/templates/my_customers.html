@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+
+{% block title %}我的客户 - 怪兽ABC CRM{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2>👥 我的客户</h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <button type="button" class="btn btn-success me-2" onclick="showBatchAddModal()">
+            📋 批量添加
+        </button>
+        <a href="{% url 'customer_add' %}" class="btn btn-primary">
+            ➕ 新增客户
+        </a>
+    </div>
+</div>
+
+<!-- 筛选和搜索 -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">状态筛选</label>
+                <select name="status" class="form-select">
+                    <option value="">全部状态</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">城市筛选</label>
+                <input type="text" name="city" class="form-control" placeholder="请输入城市" value="{{ current_city }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">搜索</label>
+                <input type="text" name="search" class="form-control" placeholder="姓名或电话" value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">🔍 筛选</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 客户列表 -->
+<div class="card">
+    <div class="card-body">
+        {% if customers %}
+        <form method="post" id="bulkForm">
+            {% csrf_token %}
+
+            {% if user.is_superuser %}
+            <div class="mb-3">
+                <button type="button" class="btn btn-primary" onclick="showBulkEditModal()">
+                    🔄 批量修改
+                </button>
+                <button type="button" class="btn btn-danger" onclick="bulkDelete()">
+                    🗑️ 批量删除
+                </button>
+            </div>
+            {% endif %}
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            {% if user.is_superuser %}
+                            <th>
+                                <input type="checkbox" id="selectAll" onclick="toggleAll(this)">
+                            </th>
+                            {% endif %}
+                            <th>状态</th>
+                            <th>姓名</th>
+                            <th>电话</th>
+                            <th>沟通次数</th>
+                            <th>下次联系时间</th>
+                            <th>最近联系时间</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            {% if user.is_superuser %}
+                            <td>
+                                <input type="checkbox" name="customer_ids" value="{{ customer.id }}"
+                                    class="customer-checkbox">
+                            </td>
+                            {% endif %}
+                            <td>
+                                {% if customer.status == 'wait_contact' %}
+                                <span class="badge bg-info">{{ customer.get_status_display }}</span>
+                                {% elif customer.status == 'wait_followup' %}
+                                <span class="badge bg-warning text-dark">{{ customer.get_status_display }}</span>
+                                {% elif customer.status == 'wait_visit' %}
+                                <span class="badge bg-primary">{{ customer.get_status_display }}</span>
+                                {% elif customer.status == 'visited' %}
+                                <span class="badge bg-success">{{ customer.get_status_display }}</span>
+                                {% elif customer.status == 'signed' %}
+                                <span class="badge bg-dark">{{ customer.get_status_display }}</span>
+                                {% elif customer.status == 'no_intent' %}
+                                <span class="badge bg-secondary">{{ customer.get_status_display }}</span>
+                                {% elif customer.status == 'unreachable' %}
+                                <span class="badge bg-danger">{{ customer.get_status_display }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ customer.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="fw-bold">{{ customer.name }}</span>
+                                    {% if customer.notes %}
+                                    <span class="text-muted small ms-2">({{ customer.notes }})</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>{{ customer.phone }}</td>
+                            <td>{{ customer.contact_count }}</td>
+                            <td>
+                                {% if customer.next_contact_time %}
+                                {{ customer.next_contact_time|date:"Y-m-d H:i" }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if customer.last_contact_at %}
+                                {{ customer.last_contact_at|date:"Y-m-d H:i" }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>{{ customer.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'customer_detail' customer.pk %}"
+                                    class="btn btn-sm btn-outline-primary">
+                                    编辑
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+
+        <!-- 分页控件 -->
+        {% if customers.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination justify-content-center">
+                {% if customers.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">首页</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ customers.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">上一页</a>
+                </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">第 {{ customers.number }} / {{ customers.paginator.num_pages }} 页</span>
+                </li>
+                {% if customers.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ customers.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">下一页</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                        href="?page={{ customers.paginator.num_pages }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">末页</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        <p class="text-muted mt-2">共 {{ customers.paginator.count }} 个客户</p>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <p>暂无客户数据</p>
+            <a href="{% url 'customer_add' %}" class="btn btn-primary mt-2">新增第一个客户</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 批量修改对话框 -->
+{% if user.is_superuser %}
+<div class="modal fade" id="bulkEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">批量修改客户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="bulkEditForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="bulk_edit">
+                <div class="modal-body">
+                    <p id="bulkEditMessage" class="text-muted mb-3"></p>
+                    <div class="mb-3">
+                        <label class="form-label">修改状态</label>
+                        <select name="status" class="form-select">
+                            <option value="">不修改</option>
+                            {% for value, label in status_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">分配销售经理</label>
+                        <select name="sales_rep" class="form-select">
+                            <option value="">不修改</option>
+                            <option value="0">设为公海</option>
+                            {% for u in all_users %}
+                            <option value="{{ u.id }}">{{ u.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">确定修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let bulkEditModal = null;
+
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll('.customer-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = source.checked;
+        });
+    }
+
+    function showBulkEditModal() {
+        const checked = document.querySelectorAll('.customer-checkbox:checked');
+        if (checked.length === 0) {
+            alert('请至少选择一个客户');
+            return;
+        }
+
+        // 清除之前的隐藏字段
+        const editForm = document.getElementById('bulkEditForm');
+        const oldInputs = editForm.querySelectorAll('input[name="customer_ids"]');
+        oldInputs.forEach(input => input.remove());
+
+        // 添加选中的客户 ID
+        checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'customer_ids';
+            input.value = cb.value;
+            editForm.appendChild(input);
+        });
+
+        // 更新消息
+        document.getElementById('bulkEditMessage').textContent =
+            `已选中 ${checked.length} 个客户，请选择要修改的字段：`;
+
+        if (!bulkEditModal) {
+            bulkEditModal = new bootstrap.Modal(document.getElementById('bulkEditModal'));
+        }
+        bulkEditModal.show();
+    }
+
+    function bulkDelete() {
+        const checked = document.querySelectorAll('.customer-checkbox:checked');
+        if (checked.length === 0) {
+            alert('请至少选择一个客户');
+            return;
+        }
+
+        if (confirm(`⚠️ 确定要删除选中的 ${checked.length} 个客户吗？\n\n此操作不可恢复！`)) {
+            const form = document.getElementById('bulkForm');
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'bulk_delete';
+            form.appendChild(actionInput);
+            form.submit();
+        }
+    }
+
+</script>
+{% endif %}
+
+<!-- 批量添加客户对话框 -->
+<div class="modal fade" id="batchAddModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📋 批量添加客户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="batchAddStep1">
+                    <div class="alert alert-info">
+                        <strong>使用说明：</strong>
+                        <ol class="mb-0">
+                            <li>从Excel中复制客户数据（包含表头）</li>
+                            <li>粘贴到下方文本框</li>
+                            <li>点击"解析数据"预览导入结果</li>
+                            <li>确认无误后点击"确认导入"</li>
+                        </ol>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">粘贴Excel数据：</label>
+                        <textarea id="batchDataInput" class="form-control" rows="10"
+                            placeholder="请粘贴从Excel复制的数据，包含表头行"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="parseBatchData()">
+                        🔍 解析数据
+                    </button>
+                </div>
+
+                <div id="batchAddStep2" style="display:none;">
+                    <div class="alert alert-success" id="parseResultMessage"></div>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-bordered" id="previewTable">
+                            <thead class="table-light sticky-top">
+                                <tr id="previewTableHeader"></tr>
+                            </thead>
+                            <tbody id="previewTableBody"></tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="backToStep1()">
+                        ← 返回修改
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="submitBatchAdd()">
+                        ✅ 确认导入
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let batchAddModal = null;
+    let parsedCustomers = [];
+
+    function showBatchAddModal() {
+        document.getElementById('batchDataInput').value = '';
+        document.getElementById('batchAddStep1').style.display = 'block';
+        document.getElementById('batchAddStep2').style.display = 'none';
+
+        if (!batchAddModal) {
+            batchAddModal = new bootstrap.Modal(document.getElementById('batchAddModal'));
+        }
+        batchAddModal.show();
+    }
+
+    function backToStep1() {
+        document.getElementById('batchAddStep1').style.display = 'block';
+        document.getElementById('batchAddStep2').style.display = 'none';
+    }
+
+    function parseBatchData() {
+        const input = document.getElementById('batchDataInput').value.trim();
+        if (!input) {
+            alert('请先粘贴数据');
+            return;
+        }
+
+        const lines = input.split('\n').filter(line => line.trim());
+        if (lines.length < 2) {
+            alert('数据格式错误，至少需要表头行和一行数据');
+            return;
+        }
+
+        // 解析表头
+        const headers = lines[0].split('\t').map(h => h.trim());
+
+        // 字段映射表
+        const fieldMap = {
+            '姓名': 'name',
+            '电话': 'phone',
+            '线索创建时间': 'created_at',
+            '线索渠道': 'source',
+            '自动定位城市': 'city_auto',
+            '手动填写地域': 'region_manual',
+            '分配状态': '_status_raw',
+            '通话状态': '_call_status',
+            '线索阶段': '_lead_stage'
+        };
+
+        // 状态映射
+        const statusMap = {
+            '待联系': 'wait_contact',
+            '待沟通': 'wait_contact',
+            '待跟进': 'wait_followup',
+            '待到访': 'wait_visit',
+            '已到访': 'visited',
+            '已签约': 'signed',
+            '无意向': 'no_intent',
+            '未接通': 'unreachable'
+        };
+
+        parsedCustomers = [];
+        const errors = [];
+
+        // 解析数据行
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split('\t');
+            const customer = { extra_data: {} };
+
+            for (let j = 0; j < headers.length; j++) {
+                const header = headers[j];
+                const value = values[j] ? values[j].trim() : '';
+
+                if (fieldMap[header]) {
+                    const field = fieldMap[header];
+                    if (field.startsWith('_')) {
+                        // 临时字段，用于状态判断
+                        customer.extra_data[header] = value;
+                    } else {
+                        customer[field] = value;
+                    }
+                } else if (value) {
+                    // 其他字段存入extra_data
+                    customer.extra_data[header] = value;
+                }
+            }
+
+            // 验证必填字段
+            if (!customer.name || !customer.phone) {
+                errors.push(`第${i + 1}行缺少姓名或电话`);
+                continue;
+            }
+
+            // 确定状态（优先级：通话状态 > 分配状态 > 线索阶段）
+            let status = 'wait_contact'; // 默认状态
+            if (customer.extra_data['通话状态']) {
+                status = statusMap[customer.extra_data['通话状态']] || status;
+            } else if (customer.extra_data['分配状态']) {
+                status = statusMap[customer.extra_data['分配状态']] || status;
+            } else if (customer.extra_data['线索阶段']) {
+                status = statusMap[customer.extra_data['线索阶段']] || status;
+            }
+            customer.status = status;
+
+            parsedCustomers.push(customer);
+        }
+
+        if (errors.length > 0) {
+            alert('数据验证失败：\n' + errors.join('\n'));
+            return;
+        }
+
+        if (parsedCustomers.length === 0) {
+            alert('没有有效的数据可以导入');
+            return;
+        }
+
+        // 显示预览
+        showPreview();
+    }
+
+    function showPreview() {
+        document.getElementById('parseResultMessage').textContent =
+            `✅ 成功解析 ${parsedCustomers.length} 条客户数据，请检查预览：`;
+
+        // 构建预览表格
+        const headerRow = document.getElementById('previewTableHeader');
+        headerRow.innerHTML = '<th>姓名</th><th>电话</th><th>状态</th><th>来源</th><th>城市</th><th>地域</th><th>创建时间</th>';
+
+        const tbody = document.getElementById('previewTableBody');
+        tbody.innerHTML = '';
+
+        const statusLabels = {
+            'wait_contact': '待沟通',
+            'wait_followup': '待跟进',
+            'wait_visit': '待到访',
+            'visited': '已到访',
+            'signed': '已签约',
+            'no_intent': '无意向',
+            'unreachable': '未接通'
+        };
+
+        parsedCustomers.forEach(customer => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+            <td>${customer.name}</td>
+            <td>${customer.phone}</td>
+            <td>${statusLabels[customer.status] || customer.status}</td>
+            <td>${customer.source || '-'}</td>
+            <td>${customer.city_auto || '-'}</td>
+            <td>${customer.region_manual || '-'}</td>
+            <td>${customer.created_at || '-'}</td>
+        `;
+        });
+
+        document.getElementById('batchAddStep1').style.display = 'none';
+        document.getElementById('batchAddStep2').style.display = 'block';
+    }
+
+    function submitBatchAdd() {
+        if (parsedCustomers.length === 0) {
+            alert('没有数据可以导入');
+            return;
+        }
+
+        // 创建表单并提交
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.href;
+
+        // CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.appendChild(csrfInput);
+
+        // Action
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'batch_add';
+        form.appendChild(actionInput);
+
+        // 数据
+        const dataInput = document.createElement('input');
+        dataInput.type = 'hidden';
+        dataInput.name = 'batch_data';
+        dataInput.value = JSON.stringify(parsedCustomers);
+        form.appendChild(dataInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+<script>
+    // 初始化Bootstrap Tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}

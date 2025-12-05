@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}已签约客户 - 怪兽ABC CRM{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <h2>✅ 已签约客户</h2>
+        <p class="text-muted">显示所有状态为"已签约"的客户</p>
+    </div>
+</div>
+
+<!-- 搜索 -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-10">
+                <label class="form-label">搜索</label>
+                <input type="text" name="search" class="form-control" placeholder="姓名或电话" value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">🔍 搜索</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 已签约客户列表 -->
+<div class="card">
+    <div class="card-body">
+        {% if customers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>电话</th>
+                        <th>负责人</th>
+                        <th>来源</th>
+                        <th>城市</th>
+                        <th>地域</th>
+                        <th>签约时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <td><strong>{{ customer.name }}</strong></td>
+                        <td>{{ customer.phone }}</td>
+                        <td>
+                            {% if customer.sales_rep %}
+                            <span class="badge bg-primary">{{ customer.sales_rep.username }}</span>
+                            {% else %}
+                            <span class="text-muted">公海</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ customer.source|default:"-" }}</td>
+                        <td>{{ customer.city_auto|default:"-" }}</td>
+                        <td>{{ customer.region_manual|default:"-" }}</td>
+                        <td>{{ customer.last_contact_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted mt-2">共 {{ customers.count }} 个已签约客户</p>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <p>暂无已签约客户</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

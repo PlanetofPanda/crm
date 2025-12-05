@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Monster ABC CRM系统{% endblock %}</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background-color: #ffffff;
+            border-right: 1px solid #e9ecef;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            /* 添加滚动条 */
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: #e9ecef;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .nav-link {
+            color: #495057;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+        }
+
+        .nav-link.active {
+            background-color: #e7f1ff;
+            color: #0d6efd;
+            font-weight: 500;
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px 40px;
+            min-height: 100vh;
+            /* 确保有足够高度 */
+            overflow-x: hidden;
+            /* 防止横向滚动 */
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #212529;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-bar {
+            width: 300px;
+            position: relative;
+        }
+
+        .search-bar input {
+            padding-left: 35px;
+            background-color: #f1f3f5;
+            border: none;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #adb5bd;
+        }
+
+        /* 底部设置区域 */
+        .sidebar-footer {
+            margin-top: auto;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 20px;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    {% if user.is_authenticated %}
+    <!-- 侧边栏 -->
+    <nav class="sidebar">
+        <!-- 用户信息 -->
+        <div class="user-profile">
+            <div class="user-avatar">
+                {{ user.username|make_list|first|upper }}
+            </div>
+            <div>
+                <div class="fw-bold">{{ user.username }}</div>
+                <div class="text-muted small">
+                    {% if user.is_superuser %}管理员{% else %}销售经理{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 导航菜单 -->
+        <div class="nav flex-column">
+            <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                <i class="bi bi-grid"></i> 仪表盘
+            </a>
+            <a class="nav-link {% if request.path == '/my-customers/' %}active{% endif %}"
+                href="{% url 'my_customers' %}">
+                <i class="bi bi-people"></i> 我的客户
+            </a>
+            <a class="nav-link {% if request.path == '/high-seas/' %}active{% endif %}" href="{% url 'high_seas' %}">
+                <i class="bi bi-water"></i> 公海线索
+            </a>
+            <a class="nav-link {% if request.path == '/key-customers/' %}active{% endif %}"
+                href="{% url 'key_customers' %}">
+                <i class="bi bi-star"></i> {% if user.is_superuser %}所有重点客户{% else %}重点客户{% endif %}
+            </a>
+            <a class="nav-link {% if request.path == '/visited/' %}active{% endif %}" href="{% url 'visited' %}">
+                <i class="bi bi-door-open"></i> 已到访
+            </a>
+            <a class="nav-link {% if request.path == '/signed/' %}active{% endif %}" href="{% url 'signed' %}">
+                <i class="bi bi-file-earmark-check"></i> 已签约客户
+            </a>
+        </div>
+
+        <!-- 底部设置 -->
+        <div class="sidebar-footer nav flex-column">
+            {% if user.is_superuser %}
+            <a class="nav-link {% if request.path == '/settings/' %}active{% endif %}" href="{% url 'settings' %}">
+                <i class="bi bi-gear"></i> 系统设置
+            </a>
+            {% endif %}
+            <a class="nav-link text-danger" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> 登出
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <div class="main-content">
+        <!-- 顶部栏 -->
+        <div class="top-header">
+            <div class="page-title">
+                <i class="bi bi-pie-chart-fill text-primary me-2"></i> Monster ABC CRM系统
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="search-bar">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" class="form-control" placeholder="搜索...">
+                </div>
+                <button class="btn btn-light rounded-circle position-relative">
+                    <i class="bi bi-bell"></i>
+                    <span
+                        class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                        <span class="visually-hidden">New alerts</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 消息提示 -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- 页面内容 -->
+        {% block content %}{% endblock %}
+    </div>
+    {% else %}
+    <!-- 未登录状态 -->
+    <div class="container py-5">
+        {% block unauthenticated_content %}
+        {# login.html will override the content block above #}
+        {% endblock %}
+    </div>
+    {% endif %}
+
+    <!-- CRM前端弹窗提醒 -->
+    <script>
+        // 申请浏览器通知权限
+        document.addEventListener('DOMContentLoaded', function () {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // 启动提醒轮询(每60秒检查一次)
+            startReminderPolling();
+        });
+
+        function startReminderPolling() {
+            // 立即检查一次
+            checkReminders();
+
+            // 每60秒检查一次
+            setInterval(checkReminders, 60000);
+        }
+
+        function checkReminders() {
+            fetch('/api/pending-reminders/')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.reminders && data.reminders.length > 0) {
+                        data.reminders.forEach(reminder => {
+                            showReminder(reminder);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.log('提醒检查失败:', error);
+                });
+        }
+
+        function showReminder(reminder) {
+            // 尝试浏览器原生通知
+            if ('Notification' in window && Notification.permission === 'granted') {
+                const notification = new Notification('⏰ 客户预约提醒', {
+                    body: `客户: ${reminder.customer_name}\n预约时间: ${reminder.next_contact_time}\n电话: ${reminder.phone}`,
+                    requireInteraction: true,
+                    tag: 'crm-reminder-' + reminder.customer_id
+                });
+
+                notification.onclick = function () {
+                    window.focus();
+                    window.location.href = '/customer/' + reminder.customer_id + '/';
+                    notification.close();
+                };
+
+                // 播放提示音
+                playReminderSound();
+            } else {
+                // 降级使用Bootstrap Modal
+                showModalReminder(reminder);
+                playReminderSound();
+            }
+        }
+
+        function showModalReminder(reminder) {
+            const modalId = 'reminderModal' + reminder.customer_id;
+            const modalHtml = `
+            <div class="modal fade" id="${modalId}" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-warning border-3">
+                        <div class="modal-header bg-warning bg-gradient">
+                            <h5 class="modal-title fw-bold">⏰ 客户预约提醒</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-2">
+                                <strong>客户:</strong> <span class="text-primary">${reminder.customer_name}</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>预约时间:</strong> ${reminder.next_contact_time}
+                            </div>
+                            <div class="mb-2">
+                                <strong>电话:</strong> ${reminder.phone}
+                            </div>
+                            <div class="mb-2">
+                                <strong>状态:</strong> <span class="badge bg-info">${reminder.status}</span>
+                            </div>
+                            ${reminder.notes ? `<div class="mt-3 p-2 bg-light rounded"><strong>备注:</strong> ${reminder.notes}</div>` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <a href="/customer/${reminder.customer_id}/" class="btn btn-primary">立即查看</a>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">稍后处理</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            // 移除已存在的同ID模态框
+            const existingModal = document.getElementById(modalId);
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // 添加新模态框
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modalElement = new bootstrap.Modal(document.getElementById(modalId));
+            modalElement.show();
+
+            // 5分钟后自动关闭
+            setTimeout(() => {
+                modalElement.hide();
+                setTimeout(() => document.getElementById(modalId).remove(), 500);
+            }, 300000);
+        }
+
+        function playReminderSound() {
+            try {
+                // 使用Web Audio API生成提示音
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('提示音播放失败:', e);
+            }
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
