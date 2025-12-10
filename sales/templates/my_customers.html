@@ -26,7 +26,7 @@
                 <select name="status" class="form-select">
                     <option value="">全部状态</option>
                     {% for value, label in status_choices %}
-                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+                    <option value="{{ value }}" {% if current_status==value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -75,7 +75,9 @@
                             {% endif %}
                             <th>状态</th>
                             <th>姓名</th>
+                            <th>备注</th>
                             <th>电话</th>
+                            <th>城市</th>
                             <th>沟通次数</th>
                             <th>下次联系时间</th>
                             <th>最近联系时间</th>
@@ -112,14 +114,18 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <div>
-                                    <span class="fw-bold">{{ customer.name }}</span>
-                                    {% if customer.notes %}
-                                    <span class="text-muted small ms-2">({{ customer.notes }})</span>
-                                    {% endif %}
-                                </div>
+                                <span class="fw-bold">{{ customer.name }}</span>
+                            </td>
+                            <td>
+                                {% if customer.notes %}
+                                <span class="text-muted small">{{ customer.notes|truncatewords:10 }}</span>
+                                {% else %}
+                                -
+                                {% endif %}
                             </td>
                             <td>{{ customer.phone }}</td>
+                            <td>{{ customer.city_auto|default:"-" }}</td>
+
                             <td>{{ customer.contact_count }}</td>
                             <td>
                                 {% if customer.next_contact_time %}

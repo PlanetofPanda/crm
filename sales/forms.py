@@ -285,4 +285,15 @@ class UserManagementForm(UserCreationForm):
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
         }
+    
+    def save(self, commit=True):
+        """重写save方法以正确保存email和is_staff字段"""
+        user = super().save(commit=False)
+        user.email = self.cleaned_data['email']
+        user.is_staff = self.cleaned_data.get('is_staff', False)
+        
+        if commit:
+            user.save()
+        
+        return user
 
