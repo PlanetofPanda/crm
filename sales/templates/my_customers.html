@@ -26,7 +26,7 @@
                 <select name="status" class="form-select">
                     <option value="">全部状态</option>
                     {% for value, label in status_choices %}
-                    <option value="{{ value }}" {% if current_status==value %}selected{% endif %}>{{ label }}</option>
+                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
