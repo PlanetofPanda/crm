@@ -90,21 +90,55 @@
             <form method="post">
                 {% csrf_token %}
                 <div class="modal-body">
+                    {% if user_form.errors %}
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            {% for field, errors in user_form.errors.items %}
+                            {% for error in errors %}
+                            {% if field == '__all__' %}
+                            <li>{{ error }}</li>
+                            {% else %}
+                            <li>{{ field }}: {{ error }}</li>
+                            {% endif %}
+                            {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var myModal = new bootstrap.Modal(document.getElementById('addUserModal'));
+                                myModal.show();
+                            });
+                    </script>
+                    {% endif %}
+
                     <div class="mb-3">
                         <label class="form-label">用户名</label>
                         {{ user_form.username }}
+                        {% if user_form.username.errors %}
+                        <div class="text-danger small">{{ user_form.username.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">邮箱</label>
                         {{ user_form.email }}
+                        {% if user_form.email.errors %}
+                        <div class="text-danger small">{{ user_form.email.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">密码</label>
                         {{ user_form.password1 }}
+                        {% if user_form.password1.errors %}
+                        <div class="text-danger small">{{ user_form.password1.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3">
                         <label class="form-label">确认密码</label>
                         {{ user_form.password2 }}
+                        {% if user_form.password2.errors %}
+                        <div class="text-danger small">{{ user_form.password2.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="mb-3 form-check">
                         {{ user_form.is_staff }}

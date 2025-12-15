@@ -281,7 +281,7 @@ class UserManagementForm(UserCreationForm):
     
     class Meta:
         model = User
-        fields = ['username', 'email', 'password1', 'password2', 'is_staff']
+        fields = ['username', 'email', 'is_staff']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
         }

@@ -259,7 +259,7 @@ def my_customers_view(request):
         customers = customers.order_by('-created_at')
     
     # 分页处理
-    paginator = Paginator(customers, 100)  # 每页100条记录
+    paginator = Paginator(customers, 50)  # 每页50条记录
     customers_page = paginator.get_page(page_number)
     
     # 保存当前页码到session

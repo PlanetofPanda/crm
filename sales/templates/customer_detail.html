@@ -34,6 +34,7 @@
                         </div>
                     </div>
 
+
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">状态</label>
@@ -81,6 +82,8 @@
                         </div>
                     </div>
 
+
+
                     <div class="mb-3">
                         <label class="form-label">重要备注</label>
                         {{ form.notes }}
@@ -98,32 +101,7 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">备注信息</label>
-                        {{ form.extra_data }}
-                        <small class="form-text text-muted">
-                            客户的备注信息或其他说明
-                        </small>
-                    </div>
 
-                    <hr class="my-4">
-                    <h6 class="mb-3">📝 自定义字段</h6>
-
-                    <!-- 动态渲染自定义字段 -->
-                    {% for field in form %}
-                    {% if field.name|slice:":13" == "custom_field_" %}
-                    <div class="mb-3">
-                        <label class="form-label">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.help_text %}
-                        <small class="form-text text-muted d-block">{{ field.help_text }}</small>
-                        {% endif %}
-                        {% if field.errors %}
-                        <div class="text-danger small">{{ field.errors }}</div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    {% endfor %}
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">💾 保存</button>
