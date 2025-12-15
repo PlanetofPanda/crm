@@ -13,7 +13,7 @@ echo ""
 # ===== 配置区域 - 请根据实际情况修改 =====
 PROJECT_DIR="/data/crm"  # 项目目录（生产环境实际路径）
 BACKUP_DIR="/var/backups/monsterabc_crm"  # 备份目录
-SERVICE_NAME="monsterabc_crm"  # Supervisor服务名
+SERVICE_NAME="crm"  # Supervisor服务名
 # =========================================
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -62,7 +62,10 @@ if [ -d ".git" ]; then
     echo ""
     read -p "确认拉取最新代码? (y/N): " confirm
     if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
-        git pull origin main || git pull origin master
+        # 获取当前分支名
+        CURRENT_BRANCH=$(git branch --show-current)
+        echo "正在拉取分支: $CURRENT_BRANCH"
+        git pull origin $CURRENT_BRANCH
         echo "✅ 代码更新成功"
     else
         echo "⚠️  已取消代码更新"
