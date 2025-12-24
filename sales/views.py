@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -316,7 +317,8 @@ def customer_detail_view(request, pk=None):
             messages.success(request, '客户信息保存成功')
             # 返回到之前浏览的页码
             last_page = request.session.get('last_customer_page', 1)
-            return redirect(f'/my-customers/?page={last_page}')
+            url = reverse('my_customers')
+            return redirect(f'{url}?page={last_page}')
     else:
         form = CustomerForm(instance=customer)
     
