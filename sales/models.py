@@ -35,7 +35,7 @@ class Customer(models.Model):
     source = models.CharField('线索来源', max_length=100, blank=True)
     
     # 地域信息
-    city_auto = models.CharField('自动定位城市', max_length=50, blank=True)
+    city_auto = models.CharField('所在城市', max_length=50, blank=True)
     region_manual = models.CharField('手动填写地域', max_length=100, blank=True)
     
     # 联系相关
@@ -62,6 +62,8 @@ class Customer(models.Model):
         verbose_name = '客户'
         verbose_name_plural = '客户'
         ordering = ['-created_at']
+    
+
     
     def save(self, *args, **kwargs):
         """

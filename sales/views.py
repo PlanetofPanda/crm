@@ -309,6 +309,7 @@ def customer_detail_view(request, pk=None):
                     }
                     return render(request, 'customer_detail.html', context)
             
+
             # 新客户自动分配给当前用户（如果没有指定销售经理）
             if not customer.pk and not customer.sales_rep and not request.user.is_superuser:
                 customer.sales_rep = request.user
@@ -616,7 +617,7 @@ def export_customers_api(request):
     ws.title = "客户数据"
     
     # 表头
-    headers = ['姓名', '电话', '状态', '负责人', '线索渠道', '自动定位城市', 
+    headers = ['姓名', '电话', '状态', '负责人', '线索渠道', '所在城市', 
                '手动填写地域', '沟通次数', '下次联系时间', '线索创建时间', '备注信息']
     ws.append(headers)
     
