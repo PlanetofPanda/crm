@@ -26,7 +26,7 @@
                 <select name="status" class="form-select">
                     <option value="">全部状态</option>
                     {% for value, label in status_choices %}
-                    <option value="{{ value }}" {% if current_status==value %}selected{% endif %}>{{ label }}</option>
+                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -156,11 +156,11 @@
                 {% if customers.has_previous %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">首页</a>
+                        href="?page=1{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">首页</a>
                 </li>
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ customers.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">上一页</a>
+                        href="?page={{ customers.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">上一页</a>
                 </li>
                 {% endif %}
 
@@ -170,11 +170,11 @@
                 {% if customers.has_next %}
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ customers.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">下一页</a>
+                        href="?page={{ customers.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">下一页</a>
                 </li>
                 <li class="page-item">
                     <a class="page-link"
-                        href="?page={{ customers.paginator.num_pages }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&province=city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">末页</a>
+                        href="?page={{ customers.paginator.num_pages }}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_city %}&city={{ current_city }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}{% if sort_order %}&sort_order={{ sort_order }}{% endif %}">末页</a>
                 </li>
                 {% endif %}
             </ul>
